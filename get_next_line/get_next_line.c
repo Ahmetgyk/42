@@ -5,157 +5,140 @@
 
 int BUFFER_SIZE = 10;
 
-int ft_strlen(const char *s)
-{
-    unsigned int i = 0;
-    while (s[i] != '\0') {
-        i++;
-    }
-    return i;
-}
-
-char *ft_strjoin(char const *s1, char const *s2)
-{
-    char *ptr;
-    int i = 0;
-    int s1len = ft_strlen(s1);
-    int s2len = ft_strlen(s2);
-    
-    ptr = malloc(s1len + s2len + 1);
-    
-    if (ptr == NULL)
-        return NULL;
-
-    while (i < s1len) {
-        ptr[i] = s1[i];
-        i++;
-    }
-
-    for (int j = 0; j < s2len; j++) {
-        ptr[i + j] = s2[j];
-    }
-    ptr[i + s2len] = '\0';
-    return ptr;
-}
-
 int ft_strchr(const char *str, int c)
 {
     unsigned char uc = (unsigned char)c;
-    int i = 0;
-
-    while (str[i] != '\0')
+    while (str && *str)
     {
-        if (str[i] == (char)uc)
+        if (*str == (char)uc)
             return 1;
-        i++;
+        str++;
     }
-
-    if (uc == '\0')
-        return 1;
-    return 0;
+    return (uc == '\0');
 }
 
-void *ft_memset(void *dest, int c, size_t n)
+int	ft_strlen(const char *str)
 {
-    size_t i;
-    char *d = (char *)dest;
+	int	i;
 
-    for (i = 0; i < n; i++)
-    {
-        d[i] = (char)c;
-    }
-    return d;
+	i = 0;
+	while (str && str[i] != '\0')
+		i++;
+	return (i);
 }
 
-void *ft_calloc(size_t num, size_t size)
+char	*ft_strjoin(char *s1, char *s2)
 {
-    void *ptr = malloc(num * size);
-    if (!ptr)
-        return NULL;
-    ft_memset(ptr, 0, num * size);
-    return ptr;
+	char	*new;
+	int		i;
+	int		j;
+
+	i = 0;
+	j = 0;
+	new = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
+	if (!new)
+	    return (s1);
+	while (s1 && s1[i])
+	{
+		new[i] = s1[i];
+		i++;
+	}
+	while (s2[j])
+	{
+		new[i] = s2[j];
+		i++;
+		j++;
+	}
+	new[i] = '\0';
+    free(s1);
+	return (new);
 }
 
-char *read_text(int fd, char *text)
+char	*read_text(int fd, char *text)
 {
-    char *buffer = ft_calloc(BUFFER_SIZE + 1, 1);
-    int n = 1;
+	char	*buffer;
+	int		n;
 
-    while (!ft_strchr(buffer, '\n') && n > 0) {
-        n = read(fd, buffer, BUFFER_SIZE);
-        if (n < 0) {
-            free(buffer);
-            return NULL; 
-        }
-        buffer[n] = '\0';
-        text = ft_strjoin(text, buffer);
-    }
-    free(buffer);
-    return text;
+	n = 1;
+	buffer = malloc(BUFFER_SIZE + 1);
+	while (n > 0)
+	{
+		n = read(fd, buffer, BUFFER_SIZE);
+		if (n < 0)
+		{
+			free(buffer);
+			return (NULL);
+		}
+		buffer[n] = '\0';
+		text = ft_strjoin(text, buffer);
+        if (ft_strchr(buffer, '\n'))
+            break;
+	}
+	free(buffer);
+	return (text);
 }
 
-char *find_line(char *text)
+char	*find_line(char *text)
 {
-    int i = 0;
-    char *line;
+	int		i;
+	int		j;
+	char	*line;
 
-    while (text[i] != '\n' && text[i] != '\0') {
-        i++;
-    }
-
-    line = malloc(i + 2);
-    if (!line)
-        return NULL;
-
-    for (int j = 0; j <= i; j++) {
-        line[j] = text[j];
-    }
+	i = 0;
+	while (text[i] != '\n' && text[i] != '\0')
+		i++;
+	line = malloc(i + 2);
+	if (!line)
+		return (NULL);
+	j = 0;
+	while (j < i)
+	{
+		line[j] = text[j];
+		j++;
+	}
+	line[i] = '\n';
     line[i + 1] = '\0';
-
-    return line;
+	return (line);
 }
 
-char *upgrade_text(char *text)
+char	*upgrade_text(char *text)
 {
-    int i = 0;
-    while (text[i] != '\n' && text[i] != '\0') {
-        i++;
-    }
+	char	*str;
+	int		i;
+	int		j;
 
-    if (text[i] == '\0') {
-        free(text);
-        return NULL; 
-    }
-
-    char *str = malloc(ft_strlen(text) - i); 
-    if (!str)
-        return NULL;
-
-    for (int j = i + 1; text[j] != '\0'; j++) {
-        str[j - i - 1] = text[j];
-    }
-    str[ft_strlen(str)] = '\0';
-    free(text); 
-
-    return str;
+	i = 0;
+	j = 0;
+	while (text[i] != '\n' && text[i] != '\0')
+		i++;
+	if (text[i] == '\0')
+		return (text);
+	str = malloc(ft_strlen(text) - i);
+	if (!str)
+		return (NULL);
+	i++;
+	while (text[i])
+		str[j++] = text[i++];
+	str[j] = '\0';
+	free(text);
+	return (str);
 }
 
-char *get_next_line(int fd)
+char	*get_next_line(int fd)
 {
-    static char *text = NULL;
-    char *line;
+	static char	*text;
+	char		*line;
 
-    if (fd == -1 || BUFFER_SIZE <= 0) {
-        return NULL;
-    }
-
-    text = read_text(fd, text);
-    if (!text) return NULL;  
-
-    line = find_line(text);
-    text = upgrade_text(text);
-
-    return line;
+	if (fd == -1 || BUFFER_SIZE <= 0)
+		return (NULL);
+	text = read_text(fd, text);
+	if (!text)
+		return (NULL);
+	line = find_line(text);
+	if (!line)
+		return (NULL);
+	text = upgrade_text(text);
+	return (line);
 }
 
 int main()
